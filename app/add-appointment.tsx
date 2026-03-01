@@ -1,9 +1,81 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addAppointment } from '@/src/utils/appointmentsStorage';
+import { getServices } from '@/src/utils/servicesStorage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FlatList,
+  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+const PERIODS = ['AM', 'PM'] as const;
+
+const ITEM_HEIGHT = 44;
+const VISIBLE_ROWS = 5;
+const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ROWS;
+const WHEEL_PADDING = ITEM_HEIGHT * Math.floor(VISIBLE_ROWS / 2);
+
+type WheelPickerProps = {
+  values: readonly string[];
+  selected: string;
+  onChange: (value: string) => void;
+};
+
+function WheelPicker({ values, selected, onChange }: WheelPickerProps) {
+  const selectedIndex = useMemo(() => {
+    const index = values.findIndex((value) => value === selected);
+    return index >= 0 ? index : 0;
+  }, [selected, values]);
+
+  const onScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = event.nativeEvent.contentOffset.y;
+      const index = Math.round(y / ITEM_HEIGHT);
+      const safeIndex = Math.max(0, Math.min(values.length - 1, index));
+      const nextValue = values[safeIndex];
+      if (nextValue && nextValue !== selected) {
+        onChange(nextValue);
+      }
+    },
+    [onChange, selected, values]
+  );
+
+  return (
+    <View style={styles.wheelBox}>
+      <View style={styles.wheelCenterMark} />
+      <FlatList
+        data={values}
+        keyExtractor={(item) => item}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={ITEM_HEIGHT}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingVertical: WHEEL_PADDING }}
+        style={{ height: WHEEL_HEIGHT }}
+        initialScrollIndex={selectedIndex}
+        getItemLayout={(_, index) => ({
+          length: ITEM_HEIGHT,
+          offset: ITEM_HEIGHT * index,
+          index,
+        })}
+        onMomentumScrollEnd={onScrollEnd}
+        renderItem={({ item }) => (
+          <View style={styles.wheelItem}>
+            <ThemedText style={item === selected ? styles.optionActive : styles.optionText}>{item}</ThemedText>
+          </View>
+        )}
+      />
+    </View>
+  );
+}
 
 export default function AddAppointment() {
   const router = useRouter();
@@ -11,21 +83,57 @@ export default function AddAppointment() {
   const [client, setClient] = useState('');
   const [service, setService] = useState('');
   const [staff, setStaff] = useState('');
-  const [status, setStatus] = useState('Đang chờ');
+  const [serviceOptions, setServiceOptions] = useState<string[]>([]);
+
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+  const [hour, setHour] = useState('10');
+  const [minute, setMinute] = useState('00');
+  const [period, setPeriod] = useState<(typeof PERIODS)[number]>('AM');
+
+  const [isServicePickerOpen, setIsServicePickerOpen] = useState(false);
+  const [selectedServiceOption, setSelectedServiceOption] = useState('');
+
+  useEffect(() => {
+    async function loadServices() {
+      const list = await getServices();
+      const names = list.map((item) => item.name);
+      setServiceOptions(names);
+
+      if (names.length > 0) {
+        const fallback = names[0];
+        setSelectedServiceOption((prev) => prev || fallback);
+        setService((prev) => prev || fallback);
+      }
+    }
+
+    loadServices();
+  }, []);
 
   async function onSave() {
     if (!time || !client) return;
+
     try {
-      const raw = await AsyncStorage.getItem('appointments');
-      const list = raw ? (JSON.parse(raw) as any[]) : [];
-      const id = `${Date.now()}`;
-      const item = { id, time, client, service, staff, status };
-      list.unshift(item);
-      await AsyncStorage.setItem('appointments', JSON.stringify(list));
+      await addAppointment({
+        time,
+        client,
+        service,
+        staff,
+        status: 'Đang chờ',
+      });
       router.back();
-    } catch (e) {
-      console.warn('Failed to save appointment', e);
+    } catch (error) {
+      console.warn('Failed to save appointment', error);
     }
+  }
+
+  function onConfirmTime() {
+    setTime(`${hour}:${minute} ${period}`);
+    setIsTimePickerOpen(false);
+  }
+
+  function onConfirmService() {
+    setService(selectedServiceOption);
+    setIsServicePickerOpen(false);
   }
 
   return (
@@ -33,13 +141,22 @@ export default function AddAppointment() {
       <ThemedText type="title">Thêm lịch hẹn</ThemedText>
 
       <ThemedText>Thời gian</ThemedText>
-      <TextInput value={time} onChangeText={setTime} style={styles.input} placeholder="10:00 AM" />
+      <TouchableOpacity style={styles.input} onPress={() => setIsTimePickerOpen(true)}>
+        <ThemedText style={time ? styles.timeValue : styles.placeholder}>{time || 'Chọn giờ'}</ThemedText>
+      </TouchableOpacity>
 
       <ThemedText>Khách hàng</ThemedText>
       <TextInput value={client} onChangeText={setClient} style={styles.input} placeholder="Tên khách" />
 
       <ThemedText>Dịch vụ</ThemedText>
-      <TextInput value={service} onChangeText={setService} style={styles.input} placeholder="Dịch vụ" />
+      <TouchableOpacity
+        style={[styles.input, serviceOptions.length === 0 && styles.inputDisabled]}
+        disabled={serviceOptions.length === 0}
+        onPress={() => setIsServicePickerOpen(true)}>
+        <ThemedText style={service ? styles.timeValue : styles.placeholder}>
+          {serviceOptions.length === 0 ? 'Chưa có dịch vụ (vào trang Dịch vụ để thêm)' : service || 'Chọn dịch vụ'}
+        </ThemedText>
+      </TouchableOpacity>
 
       <ThemedText>Nhân viên</ThemedText>
       <TextInput value={staff} onChangeText={setStaff} style={styles.input} placeholder="Nhân viên" />
@@ -52,14 +169,143 @@ export default function AddAppointment() {
           <ThemedText style={{ color: '#fff' }}>Lưu</ThemedText>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={isTimePickerOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsTimePickerOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <ThemedText type="subtitle">Chọn thời gian</ThemedText>
+
+            <View style={styles.pickerRow}>
+              <WheelPicker values={HOURS} selected={hour} onChange={setHour} />
+              <WheelPicker values={MINUTES} selected={minute} onChange={setMinute} />
+              <WheelPicker
+                values={PERIODS}
+                selected={period}
+                onChange={(value) => setPeriod(value as (typeof PERIODS)[number])}
+              />
+            </View>
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.buttonSecondary} onPress={() => setIsTimePickerOpen(false)}>
+                <ThemedText>Đóng</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.buttonPrimary} onPress={onConfirmTime}>
+                <ThemedText style={{ color: '#fff' }}>Xác nhận</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isServicePickerOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsServicePickerOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <ThemedText type="subtitle">Chọn dịch vụ</ThemedText>
+
+            <View style={styles.singlePickerWrap}>
+              <WheelPicker values={serviceOptions} selected={selectedServiceOption} onChange={setSelectedServiceOption} />
+            </View>
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.buttonSecondary} onPress={() => setIsServicePickerOpen(false)}>
+                <ThemedText>Đóng</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.buttonPrimary} onPress={onConfirmService}>
+                <ThemedText style={{ color: '#fff' }}>Xác nhận</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, gap: 8, padding: 12 },
-  input: { borderWidth: 1, borderColor: '#e5e7eb', padding: 8, borderRadius: 6 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    padding: 10,
+    borderRadius: 6,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  inputDisabled: { backgroundColor: '#f3f4f6' },
+  placeholder: { color: '#9ca3af' },
+  timeValue: { color: '#111827' },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 },
-  buttonPrimary: { backgroundColor: '#0a7ea4', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  buttonSecondary: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  buttonPrimary: {
+    minHeight: 44,
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  buttonSecondary: {
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+  },
+  pickerRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  singlePickerWrap: { marginTop: 10 },
+  wheelBox: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#f9fafb',
+  },
+  wheelCenterMark: {
+    position: 'absolute',
+    top: WHEEL_PADDING,
+    left: 6,
+    right: 6,
+    height: ITEM_HEIGHT,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    backgroundColor: '#eff6ff',
+    zIndex: 1,
+  },
+  wheelItem: {
+    height: ITEM_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionText: {
+    color: '#6b7280',
+  },
+  optionActive: {
+    color: '#0a7ea4',
+    fontWeight: '700',
+  },
 });

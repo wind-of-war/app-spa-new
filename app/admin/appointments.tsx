@@ -2,12 +2,10 @@ import AppointmentItem from '@/components/appointments/appointment-item';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appointment, deleteAppointment, getAppointments } from '@/src/utils/appointmentsStorage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-type Appointment = { id: string; time: string; client: string; service: string; staff: string; status?: string };
 
 export default function AdminAppointments() {
   const [list, setList] = useState<Appointment[]>([]);
@@ -18,14 +16,13 @@ export default function AdminAppointments() {
     if (isAdmin === false) {
       router.replace('/admin/login');
     }
-  }, [isAdmin]);
+  }, [isAdmin, router]);
 
   async function load() {
     try {
-      const raw = await AsyncStorage.getItem('appointments');
-      const parsed = raw ? (JSON.parse(raw) as Appointment[]) : [];
+      const parsed = await getAppointments();
       setList(parsed);
-    } catch (e) {
+    } catch {
       setList([]);
     }
   }
@@ -43,10 +40,7 @@ export default function AdminAppointments() {
         text: 'Xóa',
         style: 'destructive',
         onPress: async () => {
-          const raw = await AsyncStorage.getItem('appointments');
-          const parsed = raw ? (JSON.parse(raw) as Appointment[]) : [];
-          const next = parsed.filter((a) => a.id !== id);
-          await AsyncStorage.setItem('appointments', JSON.stringify(next));
+          const next = await deleteAppointment(id);
           setList(next);
         },
       },
@@ -55,7 +49,7 @@ export default function AdminAppointments() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Quản trị Lịch hẹn</ThemedText>
+      <ThemedText type="title">Quản trị lịch hẹn</ThemedText>
 
       <View style={styles.actionsRow}>
         <TouchableOpacity onPress={() => router.push('/add-appointment')} style={styles.buttonPrimary}>
@@ -65,16 +59,18 @@ export default function AdminAppointments() {
 
       <FlatList
         data={list}
-        keyExtractor={(i) => i.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <AppointmentItem appointment={item} />
             <View style={styles.rowActions}>
-              <TouchableOpacity onPress={() => router.push({ pathname: '/edit-appointment', params: { id: item.id } })} style={styles.link}>
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/edit-appointment', params: { id: item.id } })}
+                style={styles.link}>
                 <ThemedText>Chỉnh sửa</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => remove(item.id)} style={styles.linkDanger}>
-                <ThemedText> Xóa</ThemedText>
+                <ThemedText>Xóa</ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -87,9 +83,16 @@ export default function AdminAppointments() {
 const styles = StyleSheet.create({
   container: { flex: 1, gap: 12, padding: 12 },
   actionsRow: { flexDirection: 'row', justifyContent: 'flex-end' },
-  buttonPrimary: { backgroundColor: '#0a7ea4', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  buttonPrimary: {
+    minHeight: 44,
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowActions: { flexDirection: 'row', gap: 8 },
-  link: { padding: 8 },
-  linkDanger: { padding: 8 },
+  link: { minHeight: 44, minWidth: 44, paddingHorizontal: 10, justifyContent: 'center', borderRadius: 8 },
+  linkDanger: { minHeight: 44, minWidth: 44, paddingHorizontal: 10, justifyContent: 'center', borderRadius: 8 },
 });

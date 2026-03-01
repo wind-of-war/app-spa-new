@@ -1,84 +1,74 @@
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import 'react-native-reanimated';
-
-import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { useRouter } from 'expo-router';
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+type NavItem = {
+  label: string;
+  to: '/(tabs)' | '/appointments' | '/clients' | '/services' | '/staff' | '/billing' | '/ai-assistant';
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { label: 'Bảng điều khiển', to: '/(tabs)' },
+  { label: 'Lịch hẹn', to: '/appointments' },
+  { label: 'Khách hàng', to: '/clients' },
+  { label: 'Dịch vụ', to: '/services' },
+  { label: 'Nhân viên', to: '/staff' },
+  { label: 'Thanh toán', to: '/billing' },
+  { label: 'Trợ lý AI', to: '/ai-assistant' },
+];
+
 function Sidebar({ theme }: { theme: typeof Colors.light }) {
+  const pathname = usePathname();
   const router = useRouter();
   const { isAdmin } = useAdminAuth();
+
   return (
     <View style={styles.sidebar}>
-      <View style={styles.logoBox}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/48' }}
-          style={styles.logo}
-        />
-        <Text style={[styles.brand, { color: theme.tint }]}>MSMySpa Flow</Text>
+      <View style={styles.brandRow}>
+        <View style={styles.brandLogo}>
+          <Text style={styles.brandLogoText}>MS</Text>
+        </View>
+        <Text style={[styles.brandText, { color: '#3c7f6f' }]}>MySpa Flow</Text>
       </View>
 
-      <ScrollView style={styles.nav} contentContainerStyle={{ paddingVertical: 8 }}>
-        {(
-          [
-            { label: 'Bảng điều khiển', to: '/(tabs)' },
-            { label: 'Lịch hẹn', to: '/appointments' },
-            { label: 'Khách hàng', to: '/clients' },
-            { label: 'Dịch vụ', to: '/services' },
-            { label: 'Nhân viên', to: '/staff' },
-            { label: 'Thanh toán', to: '/billing' },
-          ] as const
-        ).map((item) => (
-          <Link key={item.to} href={item.to} asChild>
-            <TouchableOpacity style={styles.navItem}>
-              <Text style={[styles.navText, { color: theme.icon }]}>{item.label}</Text>
-            </TouchableOpacity>
-          </Link>
-        ))}
+      <View style={styles.navWrap}>
+        {NAV_ITEMS.map((item) => {
+          const active = pathname === item.to || (item.to === '/(tabs)' && pathname === '/');
+          return (
+            <Link key={item.to} href={item.to} asChild>
+              <TouchableOpacity style={[styles.navItem, active && styles.navItemActive]}>
+                <Text style={[styles.navText, { color: active ? '#3c7f6f' : '#64748b' }]}>{item.label}</Text>
+              </TouchableOpacity>
+            </Link>
+          );
+        })}
 
         <TouchableOpacity
-          style={[styles.navItem, { marginTop: 8 }]}
+          style={styles.adminItem}
           onPress={() => {
             if (isAdmin) router.push('/admin/appointments');
             else router.push('/admin/login');
           }}>
-          <Text style={[styles.navText, { color: theme.icon }]}>{isAdmin ? 'Quản trị' : 'Đăng nhập quản trị'}</Text>
+          <Text style={[styles.navText, { color: '#64748b' }]}>{isAdmin ? 'Quản trị' : 'Đăng nhập quản trị'}</Text>
         </TouchableOpacity>
+      </View>
 
-        <Link key="ai" href="/ai-assistant" asChild>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={[styles.navText, { color: theme.icon }]}>Trợ lý AI</Text>
-          </TouchableOpacity>
-        </Link>
-      </ScrollView>
-
-      <View style={styles.profile}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/40' }}
-          style={styles.avatar}
-        />
-        <View>
-          <Text style={[styles.profileName, { color: theme.text }]}>Elena Rodriguez</Text>
-          <Text style={[styles.profileRole, { color: theme.icon }]}>Quản trị viên</Text>
+      <View style={styles.settingsBox}>
+        <View style={styles.settingsAvatar}>
+          <Text style={styles.settingsAvatarText}>N</Text>
         </View>
+        <Text style={styles.settingsText}>Cài đặt</Text>
       </View>
     </View>
   );
@@ -87,84 +77,171 @@ function Sidebar({ theme }: { theme: typeof Colors.light }) {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
-  const isLarge = width >= 900;
-
-  const { isAdmin, logout } = useAdminAuth();
-
+  const isLarge = width >= 1024;
   const theme = Colors[colorScheme ?? 'light'];
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: '#f8faf9' }]}
+        edges={isLarge ? ['left', 'right'] : ['top', 'bottom', 'left', 'right']}>
         {isLarge ? <Sidebar theme={theme} /> : null}
 
-        <View style={[styles.main, !isLarge && styles.mainSmall]}>
-          <View style={[styles.header, !isLarge && styles.headerSmall]}>
-            <View>
-              <Text style={[styles.greeting, { color: theme.text }]}>Chào buổi sáng, Elena.</Text>
-              <Text style={[styles.sub, { color: theme.icon }]}>Spa hôm nay thật yên bình.</Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-              <Link href="/add-appointment" asChild>
-                <TouchableOpacity style={[styles.secondaryButton, !isLarge && styles.aiButtonSmall]}>
-                  <Text style={[styles.aiButtonText]}>Thêm lịch</Text>
-                </TouchableOpacity>
-              </Link>
-              <Link href="/ai-assistant" asChild>
-                <TouchableOpacity style={[styles.aiButton, !isLarge && styles.aiButtonSmall, { backgroundColor: theme.tint }]}>
-                  <Text style={[styles.aiButtonText, { color: theme.background }]}>Mở Trợ lý Vận hành</Text>
-                </TouchableOpacity>
-              </Link>
-              {isAdmin ? (
-                <>
-                  <Text style={[{ marginLeft: 8, fontWeight: '600', color: theme.text }]}>Admin</Text>
-                  <TouchableOpacity
-                    onPress={() => logout()}
-                    style={[styles.secondaryButton, { marginLeft: 4 }]}
-                  >
-                    <Text>Đăng xuất</Text>
-                  </TouchableOpacity>
-                </>
+        <View style={styles.mainShell}>
+          <View style={[styles.topbar, !isLarge && styles.topbarMobile]}>
+            <View />
+            <View style={styles.profileWrap}>
+              {isLarge ? (
+                <View style={styles.profileTextBox}>
+                  <Text style={styles.profileName}>Elena Rodriguez</Text>
+                  <Text style={styles.profileRole}>Quản trị viên</Text>
+                </View>
               ) : null}
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileAvatarText}>ER</Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.content}>
+          {!isLarge ? (
+            <View style={styles.mobileNavRow}>
+              {NAV_ITEMS.slice(0, 4).map((item) => (
+                <Link key={item.to} href={item.to} asChild>
+                  <TouchableOpacity style={styles.mobileNavItem}>
+                    <Text style={styles.mobileNavText}>{item.label}</Text>
+                  </TouchableOpacity>
+                </Link>
+              ))}
+            </View>
+          ) : null}
+
+          <View style={[styles.contentArea, !isLarge && styles.contentAreaMobile]}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
             </Stack>
           </View>
         </View>
-      </View>
-
-      <StatusBar style="auto" />
+      </SafeAreaView>
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, flexDirection: 'row', backgroundColor: '#fff' },
-  sidebar: { width: 260, backgroundColor: '#0f172a', padding: 16, justifyContent: 'space-between' },
-  logoBox: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logo: { width: 48, height: 48, borderRadius: 8, marginRight: 8 },
-  brand: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  nav: { marginTop: 24 },
-  navItem: { paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8 },
-  navText: { color: '#cbd5e1', fontSize: 15 },
-  profile: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
-  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 8 },
-  profileName: { color: '#fff', fontWeight: '600' },
-  profileRole: { color: '#94a3b8', fontSize: 12 },
-  main: { flex: 1, padding: 20 },
-  mainSmall: { padding: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  headerSmall: { flexDirection: 'column', alignItems: 'flex-start', gap: 8 },
-  greeting: { fontSize: 20, fontWeight: '700' },
-  sub: { color: '#6b7280' },
-  aiButton: { backgroundColor: '#111827', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  aiButtonSmall: { paddingVertical: 6, paddingHorizontal: 10 },
-  aiButtonText: { color: '#fff' },
-  secondaryButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb' },
-  content: { flex: 1 },
+  container: { flex: 1, flexDirection: 'row' },
+  sidebar: {
+    width: 300,
+    borderRightWidth: 1,
+    borderRightColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+  },
+  brandRow: {
+    minHeight: 86,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingHorizontal: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  brandLogo: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#3c7f6f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandLogoText: { color: '#fff', fontWeight: '800', fontSize: 24 },
+  brandText: { fontSize: 46 / 2, fontWeight: '700' },
+  navWrap: { paddingTop: 18, paddingHorizontal: 12, gap: 8, flex: 1 },
+  navItem: {
+    minHeight: 58,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+  },
+  navItemActive: { backgroundColor: '#edf2f1' },
+  navText: { fontSize: 32 / 2, fontWeight: '500' },
+  adminItem: {
+    minHeight: 50,
+    borderRadius: 12,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+  },
+  settingsBox: {
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    minHeight: 86,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingsAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#334155',
+    backgroundColor: '#1f2937',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsAvatarText: { color: '#fff', fontWeight: '600' },
+  settingsText: { color: '#475569', fontSize: 29 / 2, fontWeight: '500' },
+  mainShell: { flex: 1, backgroundColor: '#f8faf9' },
+  topbar: {
+    minHeight: 86,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+  },
+  topbarMobile: {
+    minHeight: 64,
+    paddingHorizontal: 12,
+  },
+  profileWrap: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  profileTextBox: { alignItems: 'flex-end' },
+  profileName: { fontSize: 37 / 2, fontWeight: '600', color: '#1f2937' },
+  profileRole: { fontSize: 26 / 2, color: '#64748b', marginTop: 2 },
+  profileAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#d6e1db',
+    backgroundColor: '#efe7d6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileAvatarText: { fontSize: 34 / 2, fontWeight: '700', color: '#5b4630' },
+  contentArea: { flex: 1, padding: 20 },
+  contentAreaMobile: { padding: 12 },
+  mobileNavRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    backgroundColor: '#fff',
+  },
+  mobileNavItem: {
+    minHeight: 44,
+    minWidth: 72,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: '#edf2f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mobileNavText: { color: '#3c7f6f', fontSize: 12, fontWeight: '600' },
 });

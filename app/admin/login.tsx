@@ -48,7 +48,14 @@ export default function AdminLogin() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, gap: 8, padding: 12 },
-  input: { borderWidth: 1, borderColor: '#e5e7eb', padding: 8, borderRadius: 6 },
+  input: { borderWidth: 1, borderColor: '#e5e7eb', padding: 10, borderRadius: 6, minHeight: 44 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 },
-  buttonPrimary: { backgroundColor: '#0a7ea4', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  buttonPrimary: {
+    minHeight: 44,
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
 });

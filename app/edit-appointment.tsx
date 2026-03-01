@@ -1,14 +1,23 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAppointments, updateAppointment } from '@/src/utils/appointmentsStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
+type Appointment = {
+  id: string;
+  time: string;
+  client: string;
+  service: string;
+  staff: string;
+  status: string;
+};
+
 export default function EditAppointment() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [item, setItem] = useState<any>(null);
+  const [item, setItem] = useState<Appointment | null>(null);
   const [time, setTime] = useState('');
   const [client, setClient] = useState('');
   const [service, setService] = useState('');
@@ -18,16 +27,15 @@ export default function EditAppointment() {
   useEffect(() => {
     async function load() {
       if (!id) return;
-      const raw = await AsyncStorage.getItem('appointments');
-      const list = raw ? (JSON.parse(raw) as any[]) : [];
-      const found = list.find((a) => String(a.id) === String(id));
+      const list = await getAppointments();
+      const found = list.find((appointment) => String(appointment.id) === String(id));
       if (found) {
         setItem(found);
-        setTime(found.time ?? '');
-        setClient(found.client ?? '');
-        setService(found.service ?? '');
-        setStaff(found.staff ?? '');
-        setStatus(found.status ?? '');
+        setTime(found.time);
+        setClient(found.client);
+        setService(found.service);
+        setStaff(found.staff);
+        setStatus(found.status);
       }
     }
 
@@ -35,16 +43,18 @@ export default function EditAppointment() {
   }, [id]);
 
   async function onSave() {
-    const raw = await AsyncStorage.getItem('appointments');
-    const list = raw ? (JSON.parse(raw) as any[]) : [];
-    const next = list.map((a) => (String(a.id) === String(id) ? { ...a, time, client, service, staff, status } : a));
-    await AsyncStorage.setItem('appointments', JSON.stringify(next));
+    if (!id) return;
+    await updateAppointment(String(id), { time, client, service, staff, status });
     router.back();
   }
 
-  if (!item) return (
-    <ThemedView style={styles.container}><ThemedText>Không tìm thấy lịch.</ThemedText></ThemedView>
-  );
+  if (!item) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Không tìm thấy lịch.</ThemedText>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -79,8 +89,21 @@ export default function EditAppointment() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, gap: 8, padding: 12 },
-  input: { borderWidth: 1, borderColor: '#e5e7eb', padding: 8, borderRadius: 6 },
+  input: { borderWidth: 1, borderColor: '#e5e7eb', padding: 10, borderRadius: 6, minHeight: 44 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 },
-  buttonPrimary: { backgroundColor: '#0a7ea4', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  buttonSecondary: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  buttonPrimary: {
+    minHeight: 44,
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  buttonSecondary: {
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
 });
