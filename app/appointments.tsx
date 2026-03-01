@@ -1,18 +1,18 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useResponsive } from '@/hooks/use-responsive';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function Appointments() {
-  const { width } = useWindowDimensions();
-  const isPhone = width <= 430;
+  const { isPhone, s, fs } = useResponsive();
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { gap: s(14) }]}>
       <View style={styles.headerRow}>
         <View>
-          <ThemedText type="title" style={styles.title}>Lịch hẹn</ThemedText>
-          <ThemedText style={styles.subtitle}>Quản lý luồng công việc và các phiên trị liệu.</ThemedText>
+          <ThemedText type="title" style={[styles.title, { fontSize: fs(27) }]}>Lịch hẹn</ThemedText>
+          <ThemedText style={[styles.subtitle, { fontSize: fs(16) }]}>Quản lý luồng công việc và các phiên trị liệu.</ThemedText>
         </View>
 
         <View style={[styles.actions, isPhone && styles.actionsMobile]}>
@@ -25,19 +25,19 @@ export default function Appointments() {
         </View>
       </View>
 
-      <ThemedText style={styles.dateLabel}>Chủ Nhật, 1 tháng 3</ThemedText>
+      <ThemedText style={[styles.dateLabel, { fontSize: fs(13) }]}>Chủ Nhật, 1 tháng 3</ThemedText>
 
       <View style={styles.bodyRow}>
-        <View style={[styles.calendarCard, isPhone && styles.calendarCardMobile]}>
-          <ThemedText style={styles.calendarMonth}>Tháng Ba 2026</ThemedText>
+        <View style={[styles.calendarCard, isPhone && styles.calendarCardMobile, { padding: s(isPhone ? 14 : 18) }]}>
+          <ThemedText style={[styles.calendarMonth, { fontSize: fs(18) }]}>Tháng Ba 2026</ThemedText>
           <View style={styles.calendarGrid}>
-            <ThemedText style={styles.calendarLine}>Th Th Th Th Th Th CN</ThemedText>
-            <ThemedText style={styles.calendarLine}>23 24 25 26 27 28 1</ThemedText>
-            <ThemedText style={styles.calendarLine}>2 3 4 5 6 7 8</ThemedText>
-            <ThemedText style={styles.calendarLine}>9 10 11 12 13 14 15</ThemedText>
-            <ThemedText style={styles.calendarLine}>16 17 18 19 20 21 22</ThemedText>
-            <ThemedText style={styles.calendarLine}>23 24 25 26 27 28 29</ThemedText>
-            <ThemedText style={styles.calendarLine}>30 31 1 2 3 4 5</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>Th Th Th Th Th Th CN</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>23 24 25 26 27 28 1</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>2 3 4 5 6 7 8</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>9 10 11 12 13 14 15</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>16 17 18 19 20 21 22</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>23 24 25 26 27 28 29</ThemedText>
+            <ThemedText style={[styles.calendarLine, { fontSize: fs(18) }]}>30 31 1 2 3 4 5</ThemedText>
           </View>
         </View>
 

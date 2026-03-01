@@ -1,36 +1,40 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import React from 'react';
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-
-function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
-  return (
-    <View style={styles.statCard}>
-      <View style={styles.statTop}>
-        <View style={styles.statIconBox}>
-          <ThemedText style={styles.statIcon}>{icon}</ThemedText>
-        </View>
-        <View style={styles.percentTag}>
-          <ThemedText style={styles.percentTagText}>0%</ThemedText>
-        </View>
-      </View>
-      <ThemedText style={styles.statLabel}>{label}</ThemedText>
-      <ThemedText style={styles.statValue}>{value}</ThemedText>
-    </View>
-  );
-}
+import { useResponsive } from '@/hooks/use-responsive';
+import React, { useMemo } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function DashboardScreen() {
-  const { width } = useWindowDimensions();
-  const isPhone = width <= 430;
+  const { width, s, fs, isPhone } = useResponsive();
+  const responsive = useMemo(() => {
+    const baseWidth = 390;
+    const rawScale = width / baseWidth;
+    const scale = Math.min(1.2, Math.max(0.84, rawScale));
+
+    return {
+      scale,
+      statCardMinHeight: s(132),
+      statCardPadding: s(10),
+      statIconSize: s(44),
+      statIconRadius: s(12),
+      statIconFont: s(20),
+      badgeMinWidth: s(40),
+      badgeMinHeight: s(26),
+      badgeFont: s(12),
+      labelFont: s(13),
+      labelLineHeight: s(16),
+      valueFont: s(24),
+      valueLineHeight: s(28),
+    };
+  }, [s, width]);
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.heroRow}>
+    <ThemedView style={[styles.container, { gap: s(16) }]}>
+      <View style={[styles.heroRow, { gap: s(12) }]}>
         <View>
-          <ThemedText style={styles.microTitle}>CỔNG THÔNG TIN SERENITY</ThemedText>
-          <ThemedText type="title" style={styles.title}>Tổng quan Sức khỏe</ThemedText>
-          <ThemedText style={styles.subtitle}>Chào buổi sáng. Hệ thống spa của bạn đã sẵn sàng.</ThemedText>
+          <ThemedText style={[styles.microTitle, { fontSize: fs(12) }]}>CỔNG THÔNG TIN SERENITY</ThemedText>
+          <ThemedText type="title" style={[styles.title, { fontSize: fs(33) }]}>Tổng quan Sức khỏe</ThemedText>
+          <ThemedText style={[styles.subtitle, { fontSize: fs(19) }]}>Chào buổi sáng. Hệ thống spa của bạn đã sẵn sàng.</ThemedText>
         </View>
 
         <View style={[styles.statusPill, isPhone && styles.statusPillMobile]}>
@@ -39,11 +43,166 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <View style={[styles.statRow, isPhone && styles.statRowMobile]}>
-        <StatCard label="DOANH THU NGÀY" value="$0" icon="$" />
-        <StatCard label="KHÁCH HÀNG MỚI" value="0" icon="◌" />
-        <StatCard label="LỊCH HẸN HOẠT ĐỘNG" value="0" icon="☐" />
-        <StatCard label="TỶ LỆ LẤP ĐẦY" value="0%" icon="↗" />
+      <View style={[styles.statRow, isPhone && styles.statRowMobile, { gap: s(isPhone ? 8 : 12) }]}>
+        <View
+          style={[
+            styles.statCard,
+            isPhone && styles.statCardPhone,
+            isPhone && { minHeight: responsive.statCardMinHeight, padding: responsive.statCardPadding },
+          ]}>
+          <View style={styles.statTop}>
+            <View
+              style={[
+                styles.statIconBox,
+                isPhone && styles.statIconBoxPhone,
+                isPhone && {
+                  width: responsive.statIconSize,
+                  height: responsive.statIconSize,
+                  borderRadius: responsive.statIconRadius,
+                },
+              ]}>
+              <ThemedText style={[styles.statIcon, isPhone && styles.statIconPhone, isPhone && { fontSize: responsive.statIconFont }]}>
+                $
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.percentTag,
+                isPhone && styles.percentTagPhone,
+                isPhone && { minWidth: responsive.badgeMinWidth, minHeight: responsive.badgeMinHeight },
+              ]}>
+              <ThemedText style={[styles.percentTagText, isPhone && styles.percentTagTextPhone, isPhone && { fontSize: responsive.badgeFont }]}>
+                0%
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={[styles.statLabel, isPhone && styles.statLabelPhone, isPhone && { fontSize: responsive.labelFont, lineHeight: responsive.labelLineHeight }]}>
+            DOANH THU NGÀY
+          </ThemedText>
+          <ThemedText style={[styles.statValue, isPhone && styles.statValuePhone, isPhone && { fontSize: responsive.valueFont, lineHeight: responsive.valueLineHeight }]}>
+            $0
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.statCard,
+            isPhone && styles.statCardPhone,
+            isPhone && { minHeight: responsive.statCardMinHeight, padding: responsive.statCardPadding },
+          ]}>
+          <View style={styles.statTop}>
+            <View
+              style={[
+                styles.statIconBox,
+                isPhone && styles.statIconBoxPhone,
+                isPhone && {
+                  width: responsive.statIconSize,
+                  height: responsive.statIconSize,
+                  borderRadius: responsive.statIconRadius,
+                },
+              ]}>
+              <ThemedText style={[styles.statIcon, isPhone && styles.statIconPhone, isPhone && { fontSize: responsive.statIconFont }]}>
+                ◌
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.percentTag,
+                isPhone && styles.percentTagPhone,
+                isPhone && { minWidth: responsive.badgeMinWidth, minHeight: responsive.badgeMinHeight },
+              ]}>
+              <ThemedText style={[styles.percentTagText, isPhone && styles.percentTagTextPhone, isPhone && { fontSize: responsive.badgeFont }]}>
+                0%
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={[styles.statLabel, isPhone && styles.statLabelPhone, isPhone && { fontSize: responsive.labelFont, lineHeight: responsive.labelLineHeight }]}>
+            KHÁCH HÀNG MỚI
+          </ThemedText>
+          <ThemedText style={[styles.statValue, isPhone && styles.statValuePhone, isPhone && { fontSize: responsive.valueFont, lineHeight: responsive.valueLineHeight }]}>
+            0
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.statCard,
+            isPhone && styles.statCardPhone,
+            isPhone && { minHeight: responsive.statCardMinHeight, padding: responsive.statCardPadding },
+          ]}>
+          <View style={styles.statTop}>
+            <View
+              style={[
+                styles.statIconBox,
+                isPhone && styles.statIconBoxPhone,
+                isPhone && {
+                  width: responsive.statIconSize,
+                  height: responsive.statIconSize,
+                  borderRadius: responsive.statIconRadius,
+                },
+              ]}>
+              <ThemedText style={[styles.statIcon, isPhone && styles.statIconPhone, isPhone && { fontSize: responsive.statIconFont }]}>
+                ☐
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.percentTag,
+                isPhone && styles.percentTagPhone,
+                isPhone && { minWidth: responsive.badgeMinWidth, minHeight: responsive.badgeMinHeight },
+              ]}>
+              <ThemedText style={[styles.percentTagText, isPhone && styles.percentTagTextPhone, isPhone && { fontSize: responsive.badgeFont }]}>
+                0%
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={[styles.statLabel, isPhone && styles.statLabelPhone, isPhone && { fontSize: responsive.labelFont, lineHeight: responsive.labelLineHeight }]}>
+            LỊCH HẸN HOẠT ĐỘNG
+          </ThemedText>
+          <ThemedText style={[styles.statValue, isPhone && styles.statValuePhone, isPhone && { fontSize: responsive.valueFont, lineHeight: responsive.valueLineHeight }]}>
+            0
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.statCard,
+            isPhone && styles.statCardPhone,
+            isPhone && { minHeight: responsive.statCardMinHeight, padding: responsive.statCardPadding },
+          ]}>
+          <View style={styles.statTop}>
+            <View
+              style={[
+                styles.statIconBox,
+                isPhone && styles.statIconBoxPhone,
+                isPhone && {
+                  width: responsive.statIconSize,
+                  height: responsive.statIconSize,
+                  borderRadius: responsive.statIconRadius,
+                },
+              ]}>
+              <ThemedText style={[styles.statIcon, isPhone && styles.statIconPhone, isPhone && { fontSize: responsive.statIconFont }]}>
+                ↗
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.percentTag,
+                isPhone && styles.percentTagPhone,
+                isPhone && { minWidth: responsive.badgeMinWidth, minHeight: responsive.badgeMinHeight },
+              ]}>
+              <ThemedText style={[styles.percentTagText, isPhone && styles.percentTagTextPhone, isPhone && { fontSize: responsive.badgeFont }]}>
+                0%
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={[styles.statLabel, isPhone && styles.statLabelPhone, isPhone && { fontSize: responsive.labelFont, lineHeight: responsive.labelLineHeight }]}>
+            TỶ LỆ LẤP ĐẦY
+          </ThemedText>
+          <ThemedText style={[styles.statValue, isPhone && styles.statValuePhone, isPhone && { fontSize: responsive.valueFont, lineHeight: responsive.valueLineHeight }]}>
+            0%
+          </ThemedText>
+        </View>
       </View>
 
       <View style={[styles.bottomRow, isPhone && styles.bottomRowMobile]}>
@@ -98,7 +257,7 @@ const styles = StyleSheet.create({
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#4f8b78' },
   statusText: { color: '#5b6f87', fontSize: 36 / 2, fontWeight: '500' },
   statRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
-  statRowMobile: { gap: 8 },
+  statRowMobile: { gap: 8, justifyContent: 'space-between' },
   statCard: {
     flex: 1,
     minWidth: 160,
@@ -109,6 +268,14 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 172,
   },
+  statCardPhone: {
+    flexBasis: '48%',
+    flexGrow: 0,
+    minWidth: 0,
+    minHeight: 132,
+    padding: 10,
+    borderRadius: 16,
+  },
   statTop: { flexDirection: 'row', justifyContent: 'space-between' },
   statIconBox: {
     width: 70,
@@ -118,7 +285,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  statIconBoxPhone: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+  },
   statIcon: { fontSize: 36, color: '#4f8b78', fontWeight: '700' },
+  statIconPhone: { fontSize: 20 },
   percentTag: {
     borderRadius: 999,
     minWidth: 56,
@@ -127,9 +300,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#eef4f2',
   },
+  percentTagPhone: { minWidth: 40, minHeight: 26, paddingHorizontal: 6 },
   percentTagText: { color: '#4f8b78', fontWeight: '700' },
+  percentTagTextPhone: { fontSize: 12 },
   statLabel: { marginTop: 16, color: '#52657f', fontSize: 37 / 2, fontWeight: '500' },
+  statLabelPhone: { marginTop: 8, fontSize: 13, lineHeight: 16 },
   statValue: { marginTop: 2, color: '#4f8b78', fontSize: 68 / 2, fontWeight: '700' },
+  statValuePhone: { marginTop: 0, fontSize: 24, lineHeight: 28 },
   bottomRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', flex: 1 },
   bottomRowMobile: { flex: 0 },
   flowCard: {

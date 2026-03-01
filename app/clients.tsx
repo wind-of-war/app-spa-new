@@ -1,23 +1,23 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useResponsive } from '@/hooks/use-responsive';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Clients() {
   const [query, setQuery] = useState('');
   const isEmpty = useMemo(() => query.trim().length >= 0, [query]);
-  const { width } = useWindowDimensions();
-  const isPhone = width <= 430;
+  const { isPhone, s, fs } = useResponsive();
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { gap: s(16) }]}>
       <View style={styles.headerRow}>
         <View>
-          <ThemedText type="title" style={styles.title}>Khách hàng</ThemedText>
-          <ThemedText style={styles.subtitle}>Quản lý hồ sơ khách hàng và lịch sử dịch vụ.</ThemedText>
+          <ThemedText type="title" style={[styles.title, { fontSize: fs(27) }]}>Khách hàng</ThemedText>
+          <ThemedText style={[styles.subtitle, { fontSize: fs(16) }]}>Quản lý hồ sơ khách hàng và lịch sử dịch vụ.</ThemedText>
         </View>
-        <TouchableOpacity style={[styles.addButton, isPhone && styles.addButtonMobile]}>
-          <ThemedText style={styles.addButtonText}>+ Khách hàng Mới</ThemedText>
+        <TouchableOpacity style={[styles.addButton, isPhone && styles.addButtonMobile, { paddingHorizontal: s(22) }]}>
+          <ThemedText style={[styles.addButtonText, { fontSize: fs(18) }]}>+ Khách hàng Mới</ThemedText>
         </TouchableOpacity>
       </View>
 
@@ -26,14 +26,14 @@ export default function Clients() {
         onChangeText={setQuery}
         placeholder="Tìm theo tên, email hoặc số điện thoại..."
         placeholderTextColor="#748297"
-        style={styles.searchInput}
+        style={[styles.searchInput, { minHeight: s(62), borderRadius: s(18), paddingHorizontal: s(18), fontSize: fs(18) }]}
       />
 
-      <View style={styles.emptyCard}>
+      <View style={[styles.emptyCard, { minHeight: s(320), borderRadius: s(24), paddingHorizontal: s(16) }]}>
         <View style={styles.emptyIcon}>
-          <ThemedText style={styles.emptyIconText}>◌</ThemedText>
+          <ThemedText style={[styles.emptyIconText, { fontSize: fs(36) }]}>◌</ThemedText>
         </View>
-        <ThemedText style={styles.emptyText}>
+        <ThemedText style={[styles.emptyText, { fontSize: fs(19) }]}>
           {isEmpty ? 'Chưa có khách hàng nào trong hệ thống.' : 'Không có khách hàng phù hợp.'}
         </ThemedText>
       </View>

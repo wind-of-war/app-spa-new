@@ -1,13 +1,14 @@
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useResponsive } from '@/hooks/use-responsive';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Link, Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import 'react-native-reanimated';
-import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -76,7 +77,8 @@ function Sidebar({ theme }: { theme: typeof Colors.light }) {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { width } = useWindowDimensions();
+  const { width, s, fs } = useResponsive();
+  const insets = useSafeAreaInsets();
   const isLarge = width >= 1024;
   const theme = Colors[colorScheme ?? 'light'];
 
@@ -84,11 +86,16 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SafeAreaView
         style={[styles.container, { backgroundColor: '#f8faf9' }]}
-        edges={isLarge ? ['left', 'right'] : ['top', 'bottom', 'left', 'right']}>
+        edges={isLarge ? ['left', 'right'] : ['bottom', 'left', 'right']}>
         {isLarge ? <Sidebar theme={theme} /> : null}
 
         <View style={styles.mainShell}>
-          <View style={[styles.topbar, !isLarge && styles.topbarMobile]}>
+          <View
+            style={[
+              styles.topbar,
+              !isLarge && styles.topbarMobile,
+              !isLarge && { paddingTop: insets.top, minHeight: s(64) + insets.top, paddingHorizontal: s(12) },
+            ]}>
             <View />
             <View style={styles.profileWrap}>
               {isLarge ? (
@@ -104,18 +111,18 @@ export default function RootLayout() {
           </View>
 
           {!isLarge ? (
-            <View style={styles.mobileNavRow}>
+            <View style={[styles.mobileNavRow, { gap: s(8), paddingHorizontal: s(10), paddingVertical: s(8) }]}>
               {NAV_ITEMS.slice(0, 4).map((item) => (
                 <Link key={item.to} href={item.to} asChild>
-                  <TouchableOpacity style={styles.mobileNavItem}>
-                    <Text style={styles.mobileNavText}>{item.label}</Text>
+                  <TouchableOpacity style={[styles.mobileNavItem, { minWidth: s(72), paddingHorizontal: s(10) }]}>
+                    <Text style={[styles.mobileNavText, { fontSize: fs(12) }]}>{item.label}</Text>
                   </TouchableOpacity>
                 </Link>
               ))}
             </View>
           ) : null}
 
-          <View style={[styles.contentArea, !isLarge && styles.contentAreaMobile]}>
+          <View style={[styles.contentArea, !isLarge && styles.contentAreaMobile, !isLarge && { padding: s(12) }]}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />

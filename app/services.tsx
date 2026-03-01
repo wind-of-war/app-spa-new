@@ -1,12 +1,14 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { useResponsive } from '@/hooks/use-responsive';
 import { addService, deleteService, getServices, SpaService } from '@/src/utils/servicesStorage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Services() {
+  const { s, fs } = useResponsive();
   const router = useRouter();
   const { isAdmin } = useAdminAuth();
   const [name, setName] = useState('');
@@ -52,21 +54,21 @@ export default function Services() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Dịch vụ</ThemedText>
-      <ThemedText>Quản trị thêm dịch vụ ở đây để màn đặt lịch chọn bằng cuộn.</ThemedText>
+    <ThemedView style={[styles.container, { gap: s(12), padding: s(12) }]}>
+      <ThemedText type="title" style={{ fontSize: fs(27) }}>Dịch vụ</ThemedText>
+      <ThemedText style={{ fontSize: fs(16) }}>Quản trị thêm dịch vụ ở đây để màn đặt lịch chọn bằng cuộn.</ThemedText>
 
-      <View style={styles.addRow}>
+      <View style={[styles.addRow, { gap: s(8) }]}>
         <TextInput
           value={name}
           onChangeText={setName}
-          style={styles.input}
+          style={[styles.input, { minHeight: s(44), padding: s(10), borderRadius: s(8) }]}
           placeholder="Tên dịch vụ"
           returnKeyType="done"
           onSubmitEditing={onAdd}
         />
-        <TouchableOpacity onPress={onAdd} style={styles.buttonPrimary}>
-          <ThemedText style={{ color: '#fff' }}>Thêm</ThemedText>
+        <TouchableOpacity onPress={onAdd} style={[styles.buttonPrimary, { minHeight: s(44), borderRadius: s(8), paddingHorizontal: s(14) }]}>
+          <ThemedText style={{ color: '#fff', fontSize: fs(16) }}>Thêm</ThemedText>
         </TouchableOpacity>
       </View>
 
@@ -75,9 +77,9 @@ export default function Services() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ gap: 8, paddingTop: 8 }}
         renderItem={({ item }) => (
-          <View style={styles.row}>
+          <View style={[styles.row, { borderRadius: s(10), paddingHorizontal: s(12), paddingVertical: s(10) }]}>
             <ThemedText>{item.name}</ThemedText>
-            <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.buttonDanger}>
+            <TouchableOpacity onPress={() => onDelete(item.id)} style={[styles.buttonDanger, { minHeight: s(44), borderRadius: s(8), paddingHorizontal: s(10) }]}>
               <ThemedText>Xóa</ThemedText>
             </TouchableOpacity>
           </View>

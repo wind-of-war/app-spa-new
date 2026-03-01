@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useResponsive } from '@/hooks/use-responsive';
 import { addAppointment } from '@/src/utils/appointmentsStorage';
 import { getServices } from '@/src/utils/servicesStorage';
 import { useRouter } from 'expo-router';
@@ -78,6 +79,7 @@ function WheelPicker({ values, selected, onChange }: WheelPickerProps) {
 }
 
 export default function AddAppointment() {
+  const { s, fs } = useResponsive();
   const router = useRouter();
   const [time, setTime] = useState('');
   const [client, setClient] = useState('');
@@ -137,16 +139,16 @@ export default function AddAppointment() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Thêm lịch hẹn</ThemedText>
+    <ThemedView style={[styles.container, { gap: s(8), padding: s(12) }]}>
+      <ThemedText type="title" style={{ fontSize: fs(27) }}>Thêm lịch hẹn</ThemedText>
 
       <ThemedText>Thời gian</ThemedText>
-      <TouchableOpacity style={styles.input} onPress={() => setIsTimePickerOpen(true)}>
+      <TouchableOpacity style={[styles.input, { minHeight: s(44), borderRadius: s(6), padding: s(10) }]} onPress={() => setIsTimePickerOpen(true)}>
         <ThemedText style={time ? styles.timeValue : styles.placeholder}>{time || 'Chọn giờ'}</ThemedText>
       </TouchableOpacity>
 
       <ThemedText>Khách hàng</ThemedText>
-      <TextInput value={client} onChangeText={setClient} style={styles.input} placeholder="Tên khách" />
+      <TextInput value={client} onChangeText={setClient} style={[styles.input, { minHeight: s(44), borderRadius: s(6), padding: s(10) }]} placeholder="Tên khách" />
 
       <ThemedText>Dịch vụ</ThemedText>
       <TouchableOpacity
@@ -159,14 +161,14 @@ export default function AddAppointment() {
       </TouchableOpacity>
 
       <ThemedText>Nhân viên</ThemedText>
-      <TextInput value={staff} onChangeText={setStaff} style={styles.input} placeholder="Nhân viên" />
+      <TextInput value={staff} onChangeText={setStaff} style={[styles.input, { minHeight: s(44), borderRadius: s(6), padding: s(10) }]} placeholder="Nhân viên" />
 
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.buttonSecondary}>
+      <View style={[styles.actions, { gap: s(8), marginTop: s(12) }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.buttonSecondary, { minHeight: s(44), borderRadius: s(8), paddingHorizontal: s(12) }]}>
           <ThemedText>Hủy</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onSave} style={styles.buttonPrimary}>
-          <ThemedText style={{ color: '#fff' }}>Lưu</ThemedText>
+        <TouchableOpacity onPress={onSave} style={[styles.buttonPrimary, { minHeight: s(44), borderRadius: s(8), paddingHorizontal: s(12) }]}>
+          <ThemedText style={{ color: '#fff', fontSize: fs(16) }}>Lưu</ThemedText>
         </TouchableOpacity>
       </View>
 
